@@ -1,0 +1,46 @@
+Task 1. Enable APIs
+	export PROJECT_ID=$(gcloud config get-value project)
+	
+	export REGION=us-east4
+gcloud config set compute/region $REGION
+
+//api list
+	gcloud services enable \
+  artifactregistry.googleapis.com \
+  cloudfunctions.googleapis.com \
+  cloudbuild.googleapis.com \
+  eventarc.googleapis.com \
+  run.googleapis.com \
+  logging.googleapis.com \
+  pubsub.googleapis.com 
+
+task 3:Create a Cloud Storage function
+
+1.To use Cloud Storage functions, first grant the pubsub.publisher IAM role to the Cloud Storage service account:
+
+PROJECT_NUMBER=$(gcloud projects list --filter="project_id:$PROJECT_ID" --format='value(project_number)')
+SERVICE_ACCOUNT=$(gsutil kms serviceaccount -p $PROJECT_NUMBER)
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member serviceAccount:$SERVICE_ACCOUNT \
+  --role roles/pubsub.publisher
+
+2.Run the following command to create the folder and files for the app and navigate to the folder:
+
+mkdir ~/hello-storage && cd $_
+touch index.js && touch package.json
+
+>setting bucket variable's value
+BUCKET="gs:BUCKET_NAME"
+
+//deployee the function
+
+gcloud functions deploy cs-logger \
+  --gen2 \
+  --runtime nodejs20 \
+  --entry-point cs-logger \
+  --source . \
+  --region $REGION \
+  --trigger-bucket $BUCKET \
+  --trigger-location $REGION \
+  --max-instances 2
